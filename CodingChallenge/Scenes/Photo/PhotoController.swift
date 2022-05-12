@@ -94,7 +94,7 @@ class PhotoController: UIViewController {
     }
     
     func setConstraints() {
-        scrollView.alignAllEdgesWithSuperview().height(constant: view.frame.height)
+        scrollView.alignEdgesWithSuperview([.left, .right, .top, .bottom], constants: [0,0,50,0])
         galleryImage.alignAllEdgesWithSuperview()
     }
     
