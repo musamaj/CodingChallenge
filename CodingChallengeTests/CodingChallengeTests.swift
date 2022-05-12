@@ -6,31 +6,38 @@
 //
 
 import XCTest
+import RxSwift
 @testable import CodingChallenge
 
 class CodingChallengeTests: XCTestCase {
 
+    var sut: GalleryViewModelType!
+    var controller: GalleryController!    
+    
+    let disposeBag = DisposeBag()
+    
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+        super.setUp()
+        
+        sut = GalleryViewModel()
+        controller = GalleryController(viewModel: sut)
     }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+    
+    func testApiFetching() {
+        
+        let expectation = self.expectation(description: "fetched")
+        
+        sut.inputs.fetchObserver.onNext(())
+        sut.outputs.dataSource.subscribe { event in
+            expectation.fulfill()
+        }.disposed(by: disposeBag)
+        
+        waitForExpectations(timeout: 5, handler: nil)
     }
-
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
-    }
-
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
+    
+    func testNewsActionOnSetup() {
+        controller.setupViews()
+        XCTAssertEqual(controller.view.subviews.count, 1)
     }
 
 }

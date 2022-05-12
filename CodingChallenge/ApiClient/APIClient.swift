@@ -3,12 +3,12 @@ import RxSwift
 import RxCocoa
 
 protocol WebAPIClientType {
-    func fetchNews<T: Codable>(apiRequest: APIRequest) -> Observable<T>
+    func fetchPhotos<T: Codable>(apiRequest: APIRequest) -> Observable<T>
 }
 
 class WebAPIClient: WebAPIClientType {
 
-    func fetchNews<T: Codable>(apiRequest: APIRequest) -> Observable<T> {
+    func fetchPhotos<T: Codable>(apiRequest: APIRequest) -> Observable<T> {
         let request = apiRequest.request()
         return URLSession.shared.rx.data(request: request)
             .map {

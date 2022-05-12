@@ -10,33 +10,40 @@ import UIKit
 import Kingfisher
 
 
-class NewsItemCell: RxUITableViewCell {
+class PhotoCell: RxUICollectionViewCell {
     
     
     // MARK: - UI Control
     
-    lazy var newsTitleLbl: UILabel = UILabelFactory.createUILabel(with: .black, textStyle: .large, weight: .medium, text:  "")
-    lazy var newsDescLbl: UILabel = UILabelFactory.createUILabel(with: .greyDark, textStyle: .large, numberOfLines: 2, text:  "")
-    lazy var newsImage: UIImageView = UIImageViewFactory.createImageView(mode: .scaleToFill, image: nil, tintColor: .clear)
-    lazy var timeLbl: UILabel = UILabelFactory.createUILabel(with: .greyDark, textStyle: .large, text:  "")
+    lazy var galleryImage: UIImageView = UIImageViewFactory.createImageView(mode: .scaleToFill, image: nil, tintColor: .clear)
     
     
     // MARK: - Properties
     
-    var viewModel: PhotoCellViewModelType!
+    private var viewModel: PhotoCellViewModelType!
     
     
     // MARK: Initialization
     
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
-        selectionStyle = .none
-        setupViews()
-        setupConstraints()
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        commonInit()
     }
     
-    required init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        commonInit()
+    }
+    
+    override func draw(_ rect: CGRect) {
+        super.draw(rect)
+        //render()
+    }
+    
+    private func commonInit() {
+        setupViews()
+        setupConstraints()
     }
     
     // MARK: Configuration
@@ -51,43 +58,51 @@ class NewsItemCell: RxUITableViewCell {
         super.prepareForReuse()
     }
     
-    
     // MARK: - Setup methods
     
     func setupViews() {
-        self.contentView.addSubview(newsImage)
-        self.contentView.addSubview(newsTitleLbl)
-        self.contentView.addSubview(newsDescLbl)
-        self.contentView.addSubview(timeLbl)
+        self.contentView.addSubview(galleryImage)
     }
     
     func setupConstraints() {
-        newsImage
-        .width(constant: 70)
-        .height(constant: 70)
-        .alignEdgesWithSuperview([.left, .top], constants: [20, 10])
+        galleryImage
+            .alignEdgesWithSuperview([.left, .top, .right, .bottom], constants: [0, 0, 0, 0])
         
-        timeLbl
-        .width(constant: 60)
-        .height(constant: 25)
-        .alignEdgesWithSuperview([.right, .top], constants: [20, 10])
-        
-        newsTitleLbl
-        .toRightOf(newsImage, constant: 15)
-        .toLeftOf(timeLbl, constant: 15)
-        .alignEdgeWithSuperview(.top, constant: 10)
-        
-        newsDescLbl
-        .toRightOf(newsImage, constant: 15)
-        .toLeftOf(timeLbl, constant: 15)
-        .toBottomOf(newsTitleLbl, constant: 10)
-        .alignEdgeWithSuperview(.bottom, constant: 10)
     }
     
     func bind() {
-        viewModel.outputs.imageUrl.subscribe({ [weak self] event in
-            let url = URL(string: event.element ?? "")
-            self?.newsImage.kf.setImage(with: url)
-        }).disposed(by: disposeBag)
+        
+        viewModel.outputs.imageUrl.subscribe { [weak self] event in
+            
+            guard let self = self else {return}
+            let processor = DownsamplingImageProcessor(size: CGSize.init(width: 100, height: 100))
+            |> RoundCornerImageProcessor(cornerRadius: 8)
+            
+            if let imgUrl = event.element {
+                guard let url = URL.init(string: imgUrl ?? "") else {
+                    return
+                }
+                let resource = ImageResource(downloadURL: url)
+                
+                self.galleryImage.kf.indicatorType = .activity
+                self.galleryImage.kf.setImage(
+                    with: resource,
+                    options: [
+                        .processor(processor),
+                        .scaleFactor(UIScreen.main.scale),
+                        .transition(.fade(1)),
+                        .cacheOriginalImage
+                    ], completionHandler:
+                        {
+                            result in
+                            switch result {
+                            case .success(_): break
+                            case .failure(let error):
+                                print("Job failed: \(error.localizedDescription)")
+                            }
+                        })
+            }
+        }.disposed(by: disposeBag)
     }
+    
 }

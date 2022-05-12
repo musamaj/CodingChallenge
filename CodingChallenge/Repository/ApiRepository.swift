@@ -16,7 +16,7 @@ class ApiRepository {
         self.apiClient = client
     }
     
-    func fetchNews(apiRequest: APIRequest) -> Observable<News> {
-        return apiClient.fetchNews(apiRequest: apiRequest)
+    func fetchNews(apiRequest: APIRequest) -> Observable<Photos> {
+        return apiClient.fetchPhotos(apiRequest: apiRequest)
     }
 }

@@ -7,19 +7,20 @@
 
 import Foundation
 import RxSwift
+import Kingfisher
 
 
 // MARK: - Inputs
 
 protocol PhotoCellViewModelInputs {
-    var imageUrlObserver: AnyObserver<String> {get}
+    var imageUrlObserver: AnyObserver<String?> {get}
 }
 
 
 // MARK: - Outputs
 
 protocol PhotoCellViewModelOutputs {
-    var imageUrl: Observable<String> {get}
+    var imageUrl: Observable<String?> {get}
 }
 
 protocol PhotoCellViewModelType {
@@ -27,31 +28,29 @@ protocol PhotoCellViewModelType {
     var outputs: PhotoCellViewModelOutputs { get }
 }
 
-class PhotoCellViewModel: PhotoCellViewModelType, PhotoCellViewModelInputs, PhotoCellViewModelOutputs, ReusableTableViewCellViewModelType {
+class PhotoCellViewModel: PhotoCellViewModelType, PhotoCellViewModelInputs, PhotoCellViewModelOutputs, ReusableCollectionViewCellViewModelType {
     
     
     // MARK: - Properties
     
     var inputs: PhotoCellViewModelInputs { return self}
     var outputs: PhotoCellViewModelOutputs { return self }
-    var reusableIdentifier: String { return NewsItemCell.reuseIdentifier }
+    var reusableIdentifier: String { return PhotoCell.reuseIdentifier }
     
     // MARK: - Subjects
     
-    var imageSubject : BehaviorSubject<String>
+    var imageUrlSubject = BehaviorSubject<String?>(value: nil)
     
     // MARK: - Observer/Observables
-    
-    var imageUrl: Observable<String> { return imageSubject.asObservable() }
-    var imageUrlObserver: AnyObserver<String> { return imageSubject.asObserver() }
+        
+    var imageUrl: Observable<String?> { return imageUrlSubject.asObservable() }
+    var imageUrlObserver: AnyObserver<String?> { return imageUrlSubject.asObserver() }
 
-    var photoDetails: Photo
+    private var photoDetails: Photo
     
     
     init(detail: Photo) {
         self.photoDetails = detail
-        imageSubject = BehaviorSubject<String>(value: detail.downloadURL ?? "")
+        imageUrlSubject.onNext(detail.downloadURL)
     }
-
-    
 }
